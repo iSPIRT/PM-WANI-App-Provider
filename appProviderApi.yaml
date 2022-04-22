@@ -1,0 +1,431 @@
+openapi: 3.0.1
+info:
+  title: AppProvider Backend
+  description: 'This is a sample AppProvider backend server'
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://host:2020/v1
+tags:
+- name: user
+  description: Operations about user
+  externalDocs:
+    description: Find out more about app backend
+    url: https://github.com/iSPIRT/PM-WANI-App-Provider/wiki
+- name: centralregistry
+  description: Access to central registry
+- name: token
+  description: Token Verification
+- name: logs
+  description: Logs
+paths:
+  /user:
+    post:
+      tags:
+      - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      x-codegen-request-body-name: body
+  /user/createWithArray:
+    post:
+      tags:
+      - user
+      summary: Creates list of users with given input array
+      operationId: createUsersWithArrayInput
+      requestBody:
+        description: List of user object
+        content:
+          '*/*':
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      x-codegen-request-body-name: body
+  /user/login:
+    get:
+      tags:
+      - user
+      summary: Logs user into the system
+      operationId: loginUser
+      parameters:
+      - name: username
+        in: query
+        description: The user name for login
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: The password for login in clear text
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        400:
+          description: Invalid username/password supplied
+          content: {}
+  /user/logout:
+    get:
+      tags:
+      - user
+      summary: Logs out current logged in user session
+      operationId: logoutUser
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  /user/{username}:
+    get:
+      tags:
+      - user
+      summary: Get user by user name
+      operationId: getUserByName
+      parameters:
+      - name: username
+        in: path
+        description: 'The name that needs to be fetched. Use user1 for testing. '
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid username supplied
+          content: {}
+        404:
+          description: User not found
+          content: {}
+    put:
+      tags:
+      - user
+      summary: Updated user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+      - name: username
+        in: path
+        description: name that need to be updated
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Updated user object
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        400:
+          description: Invalid user supplied
+          content: {}
+        404:
+          description: User not found
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+      - name: username
+        in: path
+        description: The name that needs to be deleted
+        required: true
+        schema:
+          type: string
+      responses:
+        400:
+          description: Invalid username supplied
+          content: {}
+        404:
+          description: User not found
+          content: {}
+  /centralregistry/getwaniproviders:
+    get:
+      tags:
+      - centralregistry
+      summary: Lists out the Wani APP and PDOA providers
+      operationId: downloadwaniproviders
+      responses:
+        200:
+          description: successful operation returns a wani_providers.xml file from
+            the central registry
+          content:
+            file:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: File not found
+          content: {}
+  /centralregistry/getaplist:
+    get:
+      tags:
+      - centralregistry
+      summary: Lists out all the AP details
+      operationId: downloadwaniaplist
+      responses:
+        200:
+          description: successful operation returns a wani_aplist.xml file from the
+            central registry
+          content:
+            file:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: File not found
+          content: {}
+  /tokenize/verifywanipdoatoken:
+    get:
+      tags:
+      - token
+      summary: internal API to Verify the wanipdoatoken
+      description: Internal API to verify the wanipdoatoken
+      parameters:
+      - name: wanipdoatoken
+        in: query
+        description: contains PDOAID|wanipdoatoken eg. https://auth.app-provider.com/?wanipdoatoken=12GF34|MjAxODA4MTV8NTlGMDIyOTM5NTdBRTI4N0Q3RDdBOTFEMEU1OEU2RTQ3OUU4NDAzRkIyMDQwM0U5N0ZGQzQ1RTE1RDRBMjcwMw==
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Valid PDOA
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  ver:
+                    type: string
+                    description: version of the profile format
+                  app-provider-id:
+                    type: string
+                    description: ID from the WANI registry(mandatory)
+                  app-provider-name:
+                    type: string
+                    description: Name from the WANI registry
+                  timestamp:
+                    type: string
+                    description: current timestamp in YYYYMMDDhhss
+                  username:
+                    type: string
+                    description: Username (mandatory)
+                  password:
+                    type: string
+                    description: password created by the user (mandatory)
+                  apMacId:
+                    type: string
+                    description: MAC ID of the WiFi radio of the Access point which
+                      SSID is selected (mandatory)
+                  payment-address:
+                    type: string
+                    description: upi://vpa/token or wallet://ac-no@ppi/token
+                  deviceMacId:
+                    type: string
+                    description: MAC ID of the user device after selecting SSID (optional)
+                  signature:
+                    type: string
+                    description: computed for this structure - signature = base-64(RSA-Encrypt(hash))
+                      . Hash hash = SHA-256(timestamp+username+password+apMacId+payment-address+deviceMacId)
+        400:
+          description: Invalid Token
+          content: {}
+        404:
+          description: PDOA not found
+          content: {}
+  /logs/getuserconnection:
+    get:
+      tags:
+      - logs
+      summary: API to get the user connection with PDOA log
+      description: API to get the user connection with PDOA log
+      parameters:
+      - name: rdate
+        in: query
+        description: |
+          A relative date range for the report, such as `Today` or `LastWeek`. For an exact range, use `start_date` and `end_date` instead.
+        schema:
+          type: string
+      - name: start_date
+        in: query
+        description: |
+          The start date for the report. Must be used together with `end_date`. This parameter is incompatible with `rdate`.
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        description: |
+          The end date for the report. Must be used together with `start_date`. This parameter is incompatible with `rdate`.
+        schema:
+          type: string
+          format: date
+      - name: pdoaid
+        in: query
+        description: |
+          To filter with PDOAID. This can be used with any of the parameters
+        schema:
+          type: string
+      - name: username
+        in: query
+        required: true
+        description: |
+          To filter with UserName. This can be used with any of the parameters
+        schema:
+          type: string    
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Session'
+            application/xml:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Session'
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: Either `rdate` or `start_date`+`end_date` are required.
+          content: {}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        preferredPayment:
+          type: string
+        userStatus:
+          type: integer
+          description: User Status
+          format: int32
+      xml:
+        name: User
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        pdoaId:
+          type: string
+          description: PDOA the User connected to
+        accessTimestamp:
+          type: string
+          description: Timestamp of the session start
+          format: date-time
+        status:
+          type: string
+          description: Session Status
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: string
+        reason:
+          type: string
+          description: Reason of complaint
+        comment:
+          type: string
+          description: comments on complaint"
+        status:
+          type: string
+          description: Session Status
